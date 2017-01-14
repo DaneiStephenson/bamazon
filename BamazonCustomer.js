@@ -24,7 +24,7 @@ var connection = mysql.createConnection({
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId);
-
+ 
   displayitems();
 })
 
@@ -33,24 +33,24 @@ function displayitems() {
 
   connection.query('SELECT * FROM `products`', {
   }, function(error, results) {
- 
+    
     console.log('There are ' + results.length + ' products in stock.');
    
     console.log('');
-  
+   
     for (var i=0; i<results.length; i++) {
-     
+      
       items[i] = new item(results[i].ProductName, results[i].DepartmentName, results[i].Price, results[i].StockQuantity, results[i].ItemID);
-     
+   
       console.log('ID: ' + results[i].ItemID);
       console.log('Product Name: ' + results[i].ProductName);
       console.log('Department Name: ' + results[i].DepartmentName);
       console.log('Price: $' + results[i].Price);
       console.log('Stock Quantity: ' + results[i].StockQuantity);
- 
+    
       console.log('');
     }
-
+ 
     insertID(results.length);
   })
 }
@@ -71,19 +71,22 @@ function insertID(products) {
   ]
   inquirer.prompt(idQuestion).then(function(answers) {
 
+    checkStock(Math.floor(answers.id));
   })
 }
 function checkStock(id) {
   console.log(id);
- 
+
   for (var i=0; i<items.length; i++) {
     if (items[i].id == id) {
-    id is passed in to update the mysql database
+  
       insertUnit(items[i].stockquantity, items[i].price, items[i].productname, items[i].id);
     }
   }
 }
 
+
+function insertUnit(stock, price, name, id) {
 
   console.log('We currently have ' + stock + ' more in stock.');
   var unitQuestion = [
@@ -99,25 +102,24 @@ function checkStock(id) {
     }
   ]
   inquirer.prompt(unitQuestion).then(function(answers) {
-   
+    
     var total = parseInt(price) * Math.floor(answers.units);
-
+   
     var instock = parseInt(stock) - answers.units
     console.log('You purchased ' + answers.units + ' ' + name + '(s) for a total of $' + total + '.');
-
+   
     connection.query('UPDATE `products` SET ? WHERE ?', 
       [{
-       
+    
         StockQuantity: instock
       },
       {
-  
+     
         ItemID: id
       }]
     , function(err, res) {
       if (err) throw err
     })
-
 
     checkout();
   })
@@ -134,12 +136,12 @@ function checkout() {
     }
   ]
   inquirer.prompt(checkoutQuestion).then(function(answers) {
- 
+  
     if (answers.checkout) {
       displayitems();
     }
     else {
-      console.log('Thank you for shopping with us');
+      console.log('Thank you for shopping');
       connection.end();
     }
   })
